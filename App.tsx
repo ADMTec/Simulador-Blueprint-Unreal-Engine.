@@ -15,11 +15,11 @@ export default function App() {
     selectedNode,
     addNode,
     updateNodePosition,
-    updateNodeProperties,
+    updateNode, // Changed
     addWire,
     deleteWire,
     deleteNode,
-    duplicateNode, // Added
+    duplicateNode,
     setSelectedNodeId,
   } = useBlueprintState();
 
@@ -56,14 +56,15 @@ export default function App() {
                 onSelectNode={setSelectedNodeId}
                 onAddNode={(type, x, y) => addNode(type as NodeType, x, y)}
                 onDeleteNode={deleteNode}
-                onDuplicateNode={duplicateNode} // Added
+                onDuplicateNode={duplicateNode}
+                onUpdateNode={updateNode}
              />
           </div>
           <div className="h-1/3 flex-shrink-0">
             <Console output={consoleOutput} />
           </div>
         </div>
-        <DetailsPanel selectedNode={selectedNode} onUpdateProperties={updateNodeProperties} />
+        <DetailsPanel selectedNode={selectedNode} onUpdateNode={updateNode} />
       </main>
     </div>
   );

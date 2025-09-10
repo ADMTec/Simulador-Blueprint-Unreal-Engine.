@@ -38,22 +38,25 @@ export const useBlueprintState = () => {
     const newNode = createNode(type, x, y);
     setNodes(prevNodes => [...prevNodes, newNode]);
   }, [createNode]);
+  
+  const updateNode = useCallback((nodeId: string, updates: Partial<Omit<Node, 'id'>>) => {
+    setNodes(prevNodes =>
+      prevNodes.map(node =>
+        node.id === nodeId ? { ...node, ...updates } : node
+      )
+    );
+  }, []);
 
   const updateNodePosition = useCallback((nodeId: string, x: number, y: number) => {
-    setNodes(prevNodes =>
-      prevNodes.map(node =>
-        node.id === nodeId ? { ...node, x, y } : node
-      )
-    );
-  }, []);
+    updateNode(nodeId, { x, y });
+  }, [updateNode]);
   
   const updateNodeProperties = useCallback((nodeId: string, newProperties: Record<string, any>) => {
-    setNodes(prevNodes =>
-      prevNodes.map(node =>
-        node.id === nodeId ? { ...node, properties: { ...node.properties, ...newProperties } } : node
-      )
-    );
-  }, []);
+    const node = nodes.find(n => n.id === nodeId);
+    if(node) {
+        updateNode(nodeId, { properties: { ...node.properties, ...newProperties } });
+    }
+  }, [nodes, updateNode]);
 
   const addWire = useCallback((wire: Omit<Wire, 'id'>) => {
     // Prevent duplicate connections to the same input pin
@@ -99,6 +102,7 @@ export const useBlueprintState = () => {
     addNode,
     updateNodePosition,
     updateNodeProperties,
+    updateNode,
     addWire,
     deleteWire,
     deleteNode,

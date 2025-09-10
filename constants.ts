@@ -40,6 +40,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
     ],
     properties: {},
   },
+  [NodeType.Sequence]: {
+    type: NodeType.Sequence,
+    title: 'Sequence',
+    comment: '',
+    inputs: [
+      { label: '', dataType: DataType.EXEC, direction: PinDirection.INPUT },
+    ],
+    outputs: [
+      { label: 'Then 0', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+      { label: 'Then 1', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+    ],
+    properties: {},
+  },
   [NodeType.PrintString]: {
     type: NodeType.PrintString,
     title: 'Print String',
@@ -76,9 +89,21 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
     ],
     properties: { name: 'myVar' },
   },
+    [NodeType.ClearVariable]: {
+    type: NodeType.ClearVariable,
+    title: 'Clear Variable',
+    comment: '',
+    inputs: [
+      { label: '', dataType: DataType.EXEC, direction: PinDirection.INPUT },
+    ],
+    outputs: [
+      { label: '', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+    ],
+    properties: { name: 'myVar' },
+  },
   [NodeType.AddInteger]: {
       type: NodeType.AddInteger,
-      title: 'Add Integer',
+      title: 'Add Integer (+)',
       comment: '',
       inputs: [
           { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
@@ -86,6 +111,84 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       outputs: [
           { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+    [NodeType.SubtractInteger]: {
+      type: NodeType.SubtractInteger,
+      title: 'Subtract Integer (-)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.MultiplyInteger]: {
+      type: NodeType.MultiplyInteger,
+      title: 'Multiply Integer (*)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.DivideInteger]: {
+      type: NodeType.DivideInteger,
+      title: 'Divide Integer (/)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.GreaterThanInteger]: {
+      type: NodeType.GreaterThanInteger,
+      title: 'Greater Than (>)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.LessThanInteger]: {
+      type: NodeType.LessThanInteger,
+      title: 'Less Than (<)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.EqualsInteger]: {
+      type: NodeType.EqualsInteger,
+      title: 'Equals (==)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
       ],
       properties: {},
   },
@@ -132,17 +235,5 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
           { label: 'Value', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
       ],
       properties: { value: false },
-  },
-  [NodeType.ClearVariable]: {
-    type: NodeType.ClearVariable,
-    title: 'Clear Variable',
-    comment: '',
-    inputs: [
-      { label: '', dataType: DataType.EXEC, direction: PinDirection.INPUT },
-    ],
-    outputs: [
-      { label: '', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
-    ],
-    properties: { name: 'myVar' },
   },
 };

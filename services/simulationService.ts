@@ -5,6 +5,13 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
   const variables: Record<string, any> = {};
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const wiresToPin = new Map(wires.map(w => [w.toPinId, w]));
+  const wiresFromPin = new Map(wires.map(w => [w.fromPinId, w]));
+
+  const getInputValue = (node: Node, pinLabel: string, pinDataType: DataType): any => {
+      const pin = node.inputs.find(p => p.label === pinLabel && p.dataType === pinDataType);
+      if (!pin) return undefined;
+      return evaluatePinValue(node.id, pin.id);
+  }
   
   const evaluatePinValue = (nodeId: string, pinId: string): any => {
     const wire = wiresToPin.get(pinId);
@@ -18,15 +25,30 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
             case NodeType.GetVariable:
                 return variables[fromNode.properties.name];
             case NodeType.AddInteger:
-                const a = evaluatePinValue(fromNode.id, fromNode.inputs.find(p => p.label === 'A')!.id);
-                const b = evaluatePinValue(fromNode.id, fromNode.inputs.find(p => p.label === 'B')!.id);
-                return (typeof a === 'number' && typeof b === 'number') ? a + b : 0;
+            case NodeType.SubtractInteger:
+            case NodeType.MultiplyInteger:
+            case NodeType.DivideInteger:
+            case NodeType.GreaterThanInteger:
+            case NodeType.LessThanInteger:
+            case NodeType.EqualsInteger:
+                const a = getInputValue(fromNode, 'A', DataType.INTEGER);
+                const b = getInputValue(fromNode, 'B', DataType.INTEGER);
+                if (typeof a !== 'number' || typeof b !== 'number') return fromNode.type.includes('Integer') ? 0 : false;
+                
+                if (fromNode.type === NodeType.AddInteger) return a + b;
+                if (fromNode.type === NodeType.SubtractInteger) return a - b;
+                if (fromNode.type === NodeType.MultiplyInteger) return a * b;
+                if (fromNode.type === NodeType.DivideInteger) return b !== 0 ? Math.floor(a / b) : 0;
+                if (fromNode.type === NodeType.GreaterThanInteger) return a > b;
+                if (fromNode.type === NodeType.LessThanInteger) return a < b;
+                if (fromNode.type === NodeType.EqualsInteger) return a === b;
+                return 0;
+
             case NodeType.StringLiteral:
-                return fromNode.properties.value;
             case NodeType.IntegerLiteral:
-                return fromNode.properties.value;
             case NodeType.BooleanLiteral:
                 return fromNode.properties.value;
+
             default:
               const outputPin = fromNode.outputs.find(p => p.id === wire.fromPinId);
               if (outputPin) {
@@ -36,18 +58,16 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
               return undefined;
         }
     } else {
-        // No wire connected, use node's internal properties
-        if (!node) return undefined;
-        switch (node.type) {
-            case NodeType.PrintString:
-                return node.properties.text;
+        // No wire connected, use node's internal properties for specific cases
+        if (node?.type === NodeType.PrintString) {
+             return node.properties.text;
         }
     }
     return undefined;
   };
   
   const findNextExecNode = (fromNode: Node, fromPinId: string): Node | undefined => {
-      const wire = wires.find(w => w.fromNodeId === fromNode.id && w.fromPinId === fromPinId);
+      const wire = wiresFromPin.get(fromPinId);
       return wire ? nodeMap.get(wire.toNodeId) : undefined;
   };
 
@@ -56,31 +76,46 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
     return ['Error: "Begin Play" node not found.'];
   }
 
+  let executionQueue: (Node | undefined)[] = [currentNode];
   let executionCount = 0;
-  const maxExecutions = 500; // Infinite loop guard
+  const maxExecutions = 1000; // Infinite loop guard
 
-  while (currentNode && executionCount < maxExecutions) {
+  while (executionQueue.length > 0 && executionCount < maxExecutions) {
+    currentNode = executionQueue.shift();
+    if (!currentNode) continue;
+
     executionCount++;
     let nextNode: Node | undefined = undefined;
     
-    // Fix: A helper to find the next node from a single exec output pin.
     const getNextNodeFromSingleExecOutput = (node: Node): Node | undefined => {
-        const execOutPin = node.outputs.find(p => p.dataType === DataType.EXEC);
-        if (execOutPin) {
-            const wire = wires.find(w => w.fromPinId === execOutPin.id);
-            return wire ? nodeMap.get(wire.toNodeId) : undefined;
-        }
-        return undefined;
+        const execOutPin = node.outputs.find(p => p.dataType === DataType.EXEC && p.label === '');
+        return execOutPin ? findNextExecNode(node, execOutPin.id) : undefined;
     };
 
     switch (currentNode.type) {
+      case NodeType.BeginPlay:
+        nextNode = getNextNodeFromSingleExecOutput(currentNode);
+        break;
+      
+      case NodeType.Sequence:
+        // Add all sequence outputs to the execution queue
+        for (const execOutPin of currentNode.outputs) {
+          if (execOutPin.dataType === DataType.EXEC) {
+            const nextNodeInSequence = findNextExecNode(currentNode, execOutPin.id);
+            if (nextNodeInSequence) {
+              executionQueue.push(nextNodeInSequence);
+            }
+          }
+        }
+        // Don't set nextNode directly, as we're using a queue now
+        break;
+        
       case NodeType.PrintString: {
         const textPin = currentNode.inputs.find(p => p.dataType === DataType.STRING);
         if (textPin) {
           const value = evaluatePinValue(currentNode.id, textPin.id);
-          output.push(String(value));
+          output.push(String(value ?? ''));
         }
-        // Fix: Correctly find the next execution node.
         nextNode = getNextNodeFromSingleExecOutput(currentNode);
         break;
       }
@@ -90,7 +125,6 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
             const value = evaluatePinValue(currentNode.id, valuePin.id);
             variables[currentNode.properties.name] = value;
           }
-          // Fix: Correctly find the next execution node.
           nextNode = getNextNodeFromSingleExecOutput(currentNode);
           break;
       }
@@ -99,34 +133,27 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
           if (varName) {
             delete variables[varName];
           }
-          // Fix: Correctly find the next execution node.
           nextNode = getNextNodeFromSingleExecOutput(currentNode);
           break;
       }
       case NodeType.Branch: {
           const conditionPin = currentNode.inputs.find(p => p.dataType === DataType.BOOLEAN);
-          let condition = false;
-          if (conditionPin) {
-            condition = !!evaluatePinValue(currentNode.id, conditionPin.id);
+          const condition = conditionPin ? !!evaluatePinValue(currentNode.id, conditionPin.id) : false;
+          const outPinLabel = condition ? 'True' : 'False';
+          const outPin = currentNode.outputs.find(p => p.label === outPinLabel);
+          if (outPin) {
+            nextNode = findNextExecNode(currentNode, outPin.id);
           }
-          const outPinId = condition ? currentNode.outputs.find(p => p.label === 'True')!.id : currentNode.outputs.find(p => p.label === 'False')!.id;
-          const wire = wires.find(w => w.fromPinId === outPinId);
-          const nextNodeId = wire ? wire.toNodeId : null;
-          nextNode = nextNodeId ? nodeMap.get(nextNodeId) : undefined;
           break;
       }
-      case NodeType.BeginPlay: {
-        // Fix: Correctly find the next execution node.
-        nextNode = getNextNodeFromSingleExecOutput(currentNode);
-        break;
-      }
       default:
-        // A non-executable node was reached in the exec chain, stop.
         nextNode = undefined;
         break;
     }
     
-    currentNode = nextNode;
+    if (nextNode) {
+      executionQueue.push(nextNode);
+    }
   }
    if (executionCount >= maxExecutions) {
     output.push('Error: Maximum execution limit reached. Possible infinite loop.');

@@ -20,16 +20,32 @@ export interface Pin {
 }
 
 export enum NodeType {
+  // Flow Control
   BeginPlay = 'BeginPlay',
-  PrintString = 'PrintString',
+  Branch = 'Branch',
+  Sequence = 'Sequence',
+
+  // Variable
   SetVariable = 'SetVariable',
   GetVariable = 'GetVariable',
-  AddInteger = 'AddInteger',
-  Branch = 'Branch',
+  ClearVariable = 'ClearVariable',
+  
+  // Literals
   StringLiteral = 'StringLiteral',
   IntegerLiteral = 'IntegerLiteral',
   BooleanLiteral = 'BooleanLiteral',
-  ClearVariable = 'ClearVariable',
+
+  // Operations
+  PrintString = 'PrintString',
+  AddInteger = 'AddInteger',
+  SubtractInteger = 'SubtractInteger',
+  MultiplyInteger = 'MultiplyInteger',
+  DivideInteger = 'DivideInteger',
+  
+  // Comparison
+  GreaterThanInteger = 'GreaterThanInteger',
+  LessThanInteger = 'LessThanInteger',
+  EqualsInteger = 'EqualsInteger',
 }
 
 export interface Node {
