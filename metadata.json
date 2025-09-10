@@ -1,0 +1,5 @@
+{
+  "name": "Unreal Engine Blueprint Simulator",
+  "description": "A web-based simulator for Unreal Engine's Blueprint visual scripting system. Users can create logic by connecting nodes on a canvas and execute the visual script to see the output.",
+  "requestFramePermissions": []
+}
