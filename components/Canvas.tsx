@@ -70,6 +70,50 @@ export default function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, k: 1 });
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const isNumericType = useCallback((type: DataType) => type === DataType.INTEGER || type === DataType.FLOAT, []);
+
+  const pinsAreCompatible = useCallback((fromPin: Pin, toPin: Pin) => {
+    if (fromPin.dataType === DataType.EXEC || toPin.dataType === DataType.EXEC) {
+      return fromPin.dataType === DataType.EXEC && toPin.dataType === DataType.EXEC;
+    }
+
+    if (fromPin.dataType === DataType.ANY || toPin.dataType === DataType.ANY) {
+      return true;
+    }
+
+    if (fromPin.dataType === toPin.dataType) {
+      return true;
+    }
+
+    if (isNumericType(fromPin.dataType) && isNumericType(toPin.dataType)) {
+      return true;
+    }
+
+    return false;
+  }, [isNumericType]);
+
+  const determineWireDataType = useCallback((fromPin: Pin, toPin: Pin): DataType => {
+    if (fromPin.dataType === DataType.EXEC || toPin.dataType === DataType.EXEC) {
+      return DataType.EXEC;
+    }
+
+    if (fromPin.dataType === DataType.ANY) {
+      return toPin.dataType;
+    }
+
+    if (toPin.dataType === DataType.ANY) {
+      return fromPin.dataType;
+    }
+
+    if (isNumericType(fromPin.dataType) && isNumericType(toPin.dataType)) {
+      return fromPin.dataType === DataType.FLOAT || toPin.dataType === DataType.FLOAT
+        ? DataType.FLOAT
+        : DataType.INTEGER;
+    }
+
+    return fromPin.dataType;
+  }, [isNumericType]);
   
   const nodeMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
   const pinMap = useMemo(() => {
@@ -154,23 +198,18 @@ export default function Canvas({
     e.stopPropagation();
     if (e.button === 0 && wirePreview && toPin.direction === PinDirection.INPUT) {
         const fromPin = wirePreview.fromPin;
-        if (toPin.nodeId !== fromPin.nodeId && (
-            toPin.dataType === fromPin.dataType ||
-            fromPin.dataType === DataType.ANY ||
-            toPin.dataType === DataType.ANY ||
-            (fromPin.dataType === DataType.EXEC && toPin.dataType === DataType.EXEC)
-        )) {
+        if (toPin.nodeId !== fromPin.nodeId && pinsAreCompatible(fromPin, toPin)) {
             onAddWire({
                 fromNodeId: fromPin.nodeId,
                 fromPinId: fromPin.id,
                 toNodeId: toPin.nodeId,
                 toPinId: toPin.id,
-                dataType: fromPin.dataType === DataType.EXEC ? DataType.EXEC : (fromPin.dataType !== DataType.ANY ? fromPin.dataType : toPin.dataType),
+                dataType: determineWireDataType(fromPin, toPin),
             });
         }
     }
     setWirePreview(null);
-  }, [wirePreview, onAddWire]);
+  }, [wirePreview, onAddWire, pinsAreCompatible, determineWireDataType]);
 
   const handleMouseUp = useCallback(() => {
     setDragging(null);

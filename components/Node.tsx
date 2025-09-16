@@ -49,9 +49,10 @@ const NodeComponent: React.FC<NodeProps> = ({ node, isSelected, onNodeMouseDown,
     node.type === NodeTypeEnum.GetVariable ||
     node.type === NodeTypeEnum.ClearVariable;
     
-  const showEditableTitle = 
+  const showEditableTitle =
     node.type === NodeTypeEnum.StringLiteral ||
     node.type === NodeTypeEnum.IntegerLiteral ||
+    node.type === NodeTypeEnum.FloatLiteral ||
     node.type === NodeTypeEnum.BooleanLiteral;
 
   const [isEditingName, setIsEditingName] = useState(false);

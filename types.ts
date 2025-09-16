@@ -2,6 +2,7 @@ export enum DataType {
   EXEC = 'EXEC',
   STRING = 'STRING',
   INTEGER = 'INTEGER',
+  FLOAT = 'FLOAT',
   BOOLEAN = 'BOOLEAN',
   ANY = 'ANY',
 }
@@ -33,6 +34,7 @@ export enum NodeType {
   // Literals
   StringLiteral = 'StringLiteral',
   IntegerLiteral = 'IntegerLiteral',
+  FloatLiteral = 'FloatLiteral',
   BooleanLiteral = 'BooleanLiteral',
 
   // Operations
@@ -41,11 +43,18 @@ export enum NodeType {
   SubtractInteger = 'SubtractInteger',
   MultiplyInteger = 'MultiplyInteger',
   DivideInteger = 'DivideInteger',
-  
+  AddFloat = 'AddFloat',
+  SubtractFloat = 'SubtractFloat',
+  MultiplyFloat = 'MultiplyFloat',
+  DivideFloat = 'DivideFloat',
+
   // Comparison
   GreaterThanInteger = 'GreaterThanInteger',
   LessThanInteger = 'LessThanInteger',
   EqualsInteger = 'EqualsInteger',
+  GreaterThanFloat = 'GreaterThanFloat',
+  LessThanFloat = 'LessThanFloat',
+  EqualsFloat = 'EqualsFloat',
 }
 
 export interface Node {

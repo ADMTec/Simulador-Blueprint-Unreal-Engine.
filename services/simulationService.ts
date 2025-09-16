@@ -11,7 +11,7 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
       const pin = node.inputs.find(p => p.label === pinLabel && p.dataType === pinDataType);
       if (!pin) return undefined;
       return evaluatePinValue(node.id, pin.id);
-  }
+  };
   
   const evaluatePinValue = (nodeId: string, pinId: string): any => {
     const wire = wiresToPin.get(pinId);
@@ -27,25 +27,59 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
             case NodeType.AddInteger:
             case NodeType.SubtractInteger:
             case NodeType.MultiplyInteger:
-            case NodeType.DivideInteger:
-            case NodeType.GreaterThanInteger:
-            case NodeType.LessThanInteger:
-            case NodeType.EqualsInteger:
+            case NodeType.DivideInteger: {
                 const a = getInputValue(fromNode, 'A', DataType.INTEGER);
                 const b = getInputValue(fromNode, 'B', DataType.INTEGER);
-                if (typeof a !== 'number' || typeof b !== 'number') return fromNode.type.includes('Integer') ? 0 : false;
-                
+                if (typeof a !== 'number' || typeof b !== 'number') return 0;
+
                 if (fromNode.type === NodeType.AddInteger) return a + b;
                 if (fromNode.type === NodeType.SubtractInteger) return a - b;
                 if (fromNode.type === NodeType.MultiplyInteger) return a * b;
                 if (fromNode.type === NodeType.DivideInteger) return b !== 0 ? Math.floor(a / b) : 0;
+                return 0;
+            }
+            case NodeType.GreaterThanInteger:
+            case NodeType.LessThanInteger:
+            case NodeType.EqualsInteger: {
+                const a = getInputValue(fromNode, 'A', DataType.INTEGER);
+                const b = getInputValue(fromNode, 'B', DataType.INTEGER);
+                if (typeof a !== 'number' || typeof b !== 'number') return false;
+
                 if (fromNode.type === NodeType.GreaterThanInteger) return a > b;
                 if (fromNode.type === NodeType.LessThanInteger) return a < b;
                 if (fromNode.type === NodeType.EqualsInteger) return a === b;
+                return false;
+            }
+            case NodeType.AddFloat:
+            case NodeType.SubtractFloat:
+            case NodeType.MultiplyFloat:
+            case NodeType.DivideFloat: {
+                const a = getInputValue(fromNode, 'A', DataType.FLOAT);
+                const b = getInputValue(fromNode, 'B', DataType.FLOAT);
+                if (typeof a !== 'number' || typeof b !== 'number') return 0;
+
+                if (fromNode.type === NodeType.AddFloat) return a + b;
+                if (fromNode.type === NodeType.SubtractFloat) return a - b;
+                if (fromNode.type === NodeType.MultiplyFloat) return a * b;
+                if (fromNode.type === NodeType.DivideFloat) return b !== 0 ? a / b : 0;
                 return 0;
+            }
+            case NodeType.GreaterThanFloat:
+            case NodeType.LessThanFloat:
+            case NodeType.EqualsFloat: {
+                const a = getInputValue(fromNode, 'A', DataType.FLOAT);
+                const b = getInputValue(fromNode, 'B', DataType.FLOAT);
+                if (typeof a !== 'number' || typeof b !== 'number') return false;
+
+                if (fromNode.type === NodeType.GreaterThanFloat) return a > b;
+                if (fromNode.type === NodeType.LessThanFloat) return a < b;
+                if (fromNode.type === NodeType.EqualsFloat) return a === b;
+                return false;
+            }
 
             case NodeType.StringLiteral:
             case NodeType.IntegerLiteral:
+            case NodeType.FloatLiteral:
             case NodeType.BooleanLiteral:
                 return fromNode.properties.value;
 
