@@ -248,6 +248,44 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.AbsoluteInteger]: {
+      type: NodeType.AbsoluteInteger,
+      title: 'Abs Int (|A|)',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.MinInteger]: {
+      type: NodeType.MinInteger,
+      title: 'Min Int (A, B)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.MaxInteger]: {
+      type: NodeType.MaxInteger,
+      title: 'Max Int (A, B)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.AddFloat]: {
       type: NodeType.AddFloat,
       title: 'Add Float (+)',
@@ -334,6 +372,119 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       inputs: [
           { label: 'Min', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
           { label: 'Max', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.AbsoluteFloat]: {
+      type: NodeType.AbsoluteFloat,
+      title: 'Abs Float (|A|)',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.MinFloat]: {
+      type: NodeType.MinFloat,
+      title: 'Min Float (A, B)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.MaxFloat]: {
+      type: NodeType.MaxFloat,
+      title: 'Max Float (A, B)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.PowerFloat]: {
+      type: NodeType.PowerFloat,
+      title: 'Float Power (A^B)',
+      comment: '',
+      inputs: [
+          { label: 'Base', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'Exponent', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.SquareRootFloat]: {
+      type: NodeType.SquareRootFloat,
+      title: 'Float Square Root (√)',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.FloorFloat]: {
+      type: NodeType.FloorFloat,
+      title: 'Floor (⌊A⌋)',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.CeilFloat]: {
+      type: NodeType.CeilFloat,
+      title: 'Ceil (⌈A⌉)',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.RoundFloat]: {
+      type: NodeType.RoundFloat,
+      title: 'Round',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.LerpFloat]: {
+      type: NodeType.LerpFloat,
+      title: 'Lerp Float',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'Alpha', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
       ],
       outputs: [
           { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
@@ -575,6 +726,9 @@ export const NODE_LIBRARY_GROUPS: { label: string; types: NodeType[] }[] = [
       NodeType.ModuloInteger,
       NodeType.ClampInteger,
       NodeType.RandomInteger,
+      NodeType.AbsoluteInteger,
+      NodeType.MinInteger,
+      NodeType.MaxInteger,
     ],
   },
   {
@@ -587,6 +741,15 @@ export const NODE_LIBRARY_GROUPS: { label: string; types: NodeType[] }[] = [
       NodeType.ModuloFloat,
       NodeType.ClampFloat,
       NodeType.RandomFloat,
+      NodeType.AbsoluteFloat,
+      NodeType.MinFloat,
+      NodeType.MaxFloat,
+      NodeType.PowerFloat,
+      NodeType.SquareRootFloat,
+      NodeType.FloorFloat,
+      NodeType.CeilFloat,
+      NodeType.RoundFloat,
+      NodeType.LerpFloat,
     ],
   },
   {

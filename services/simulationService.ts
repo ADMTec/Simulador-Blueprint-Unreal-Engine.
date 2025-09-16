@@ -68,6 +68,22 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
                 }
                 return low + Math.floor(Math.random() * range);
             }
+            case NodeType.AbsoluteInteger: {
+                const value = getInputValue(fromNode, 'Value', DataType.INTEGER);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return Math.abs(Math.trunc(value));
+            }
+            case NodeType.MinInteger:
+            case NodeType.MaxInteger: {
+                const aValue = getInputValue(fromNode, 'A', DataType.INTEGER);
+                const bValue = getInputValue(fromNode, 'B', DataType.INTEGER);
+                const a = typeof aValue === 'number' && Number.isFinite(aValue) ? Math.trunc(aValue) : undefined;
+                const b = typeof bValue === 'number' && Number.isFinite(bValue) ? Math.trunc(bValue) : undefined;
+                if (a === undefined && b === undefined) return 0;
+                if (a === undefined) return b ?? 0;
+                if (b === undefined) return a;
+                return fromNode.type === NodeType.MinInteger ? Math.min(a, b) : Math.max(a, b);
+            }
             case NodeType.GreaterThanInteger:
             case NodeType.LessThanInteger:
             case NodeType.EqualsInteger: {
@@ -122,6 +138,60 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
                     return low;
                 }
                 return low + Math.random() * range;
+            }
+            case NodeType.AbsoluteFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return Math.abs(value);
+            }
+            case NodeType.MinFloat:
+            case NodeType.MaxFloat: {
+                const aValue = getInputValue(fromNode, 'A', DataType.FLOAT);
+                const bValue = getInputValue(fromNode, 'B', DataType.FLOAT);
+                const a = typeof aValue === 'number' && Number.isFinite(aValue) ? aValue : undefined;
+                const b = typeof bValue === 'number' && Number.isFinite(bValue) ? bValue : undefined;
+                if (a === undefined && b === undefined) return 0;
+                if (a === undefined) return b ?? 0;
+                if (b === undefined) return a;
+                return fromNode.type === NodeType.MinFloat ? Math.min(a, b) : Math.max(a, b);
+            }
+            case NodeType.PowerFloat: {
+                const baseValue = getInputValue(fromNode, 'Base', DataType.FLOAT);
+                const exponentValue = getInputValue(fromNode, 'Exponent', DataType.FLOAT);
+                const base = typeof baseValue === 'number' && Number.isFinite(baseValue) ? baseValue : 0;
+                const exponent = typeof exponentValue === 'number' && Number.isFinite(exponentValue) ? exponentValue : 0;
+                return Math.pow(base, exponent);
+            }
+            case NodeType.SquareRootFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return value < 0 ? NaN : Math.sqrt(value);
+            }
+            case NodeType.FloorFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return Math.floor(value);
+            }
+            case NodeType.CeilFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return Math.ceil(value);
+            }
+            case NodeType.RoundFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+                return Math.round(value);
+            }
+            case NodeType.LerpFloat: {
+                const aValue = getInputValue(fromNode, 'A', DataType.FLOAT);
+                const bValue = getInputValue(fromNode, 'B', DataType.FLOAT);
+                const alphaValue = getInputValue(fromNode, 'Alpha', DataType.FLOAT);
+                const hasA = typeof aValue === 'number' && Number.isFinite(aValue);
+                const hasB = typeof bValue === 'number' && Number.isFinite(bValue);
+                const start = hasA ? (aValue as number) : 0;
+                const end = hasB ? (bValue as number) : start;
+                const alpha = typeof alphaValue === 'number' && Number.isFinite(alphaValue) ? (alphaValue as number) : 0;
+                return start + (end - start) * alpha;
             }
             case NodeType.IntToFloat: {
                 const value = getInputValue(fromNode, 'Value', DataType.INTEGER);
