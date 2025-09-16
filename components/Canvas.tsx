@@ -264,8 +264,10 @@ export default function Canvas({
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    const target = e.target as HTMLElement;
-    if (!canvasRef.current || !target.contains(e.currentTarget as Node)) return;
+    if (!canvasRef.current) return;
+
+    const target = e.target as Node | null;
+    if (!target || !canvasRef.current.contains(target)) return;
 
     const { x, y } = getCanvasCoords(e.clientX, e.clientY);
     const items = Object.entries(NODE_TEMPLATES).map(([type, template]) => ({
