@@ -10,11 +10,21 @@ const DraggableNode: React.FC<{ type: NodeType, title: string }> = ({ type, titl
 
   return (
     <div
-      className="p-2 mb-2 bg-[#3c3c3c] text-white rounded-md cursor-grab hover:bg-[#4a4a4a] transition-colors"
+      className="group relative mb-3 overflow-hidden rounded-lg border border-slate-800/60 bg-slate-900/60 px-3 py-2.5 text-slate-200 cursor-grab select-none transition-transform duration-150 hover:-translate-y-0.5 hover:border-sky-400/60"
+      style={{ boxShadow: '0 14px 30px -24px rgba(56, 189, 248, 0.8)' }}
       onDragStart={(event) => onDragStart(event, type)}
       draggable
     >
-      {title}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+        style={{
+          background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.16), rgba(8, 145, 178, 0.12))',
+        }}
+      />
+      <div className="relative flex items-center justify-between">
+        <span className="text-sm font-medium tracking-wide">{title}</span>
+        <span className="text-[10px] uppercase tracking-[0.35em] text-sky-300/80">Drag</span>
+      </div>
     </div>
   );
 };
@@ -68,10 +78,12 @@ export default function NodeLibrary() {
   const totalMatches = filteredGroups.reduce((count, group) => count + group.nodes.length, 0);
 
   return (
-    <aside className="w-64 bg-[#252526] p-4 flex-shrink-0 z-10 shadow-lg overflow-y-auto">
-      <h2 className="text-lg font-bold text-gray-300 border-b border-gray-600 pb-2 mb-4">Nodes</h2>
-      <div className="mb-4">
-        <label htmlFor="node-search" className="block text-xs uppercase tracking-wide text-gray-500 mb-1">
+    <aside className="w-72 bg-slate-950/45 border-r border-slate-800/70 px-5 py-6 flex-shrink-0 z-10 overflow-y-auto backdrop-blur-md text-slate-200">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400 border-b border-slate-800/60 pb-3 mb-6">
+        Nodes
+      </h2>
+      <div className="mb-6">
+        <label htmlFor="node-search" className="block text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">
           Search
         </label>
         <input
@@ -80,18 +92,21 @@ export default function NodeLibrary() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search nodes..."
-          className="w-full px-2 py-1 text-sm bg-[#1e1e1e] border border-gray-600 rounded focus:outline-none focus:border-blue-400"
+          className="w-full px-3 py-2 text-sm bg-[#0f172a]/70 border border-slate-700 rounded-lg text-slate-200 placeholder:text-slate-500/70 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
         />
+        <p className="mt-2 text-[11px] uppercase tracking-[0.3em] text-slate-500">
+          {totalMatches} match{totalMatches === 1 ? '' : 'es'}
+        </p>
       </div>
 
       {totalMatches === 0 ? (
-        <p className="text-sm text-gray-500">No nodes match your search.</p>
+        <p className="text-sm text-slate-500">No nodes match your search.</p>
       ) : (
         filteredGroups.map(group => (
-          <section key={group.label} className="mb-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-              {group.label}
-              <span className="ml-2 text-[10px] font-normal text-gray-500">{group.nodes.length}</span>
+          <section key={group.label} className="mb-7">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400 mb-3 flex items-center justify-between">
+              <span>{group.label}</span>
+              <span className="text-[10px] font-normal text-slate-500">{group.nodes.length}</span>
             </h3>
             {group.nodes.map(node => (
               <DraggableNode key={node.type} type={node.type} title={node.title} />

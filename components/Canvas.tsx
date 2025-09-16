@@ -71,6 +71,44 @@ export default function Canvas({
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, k: 1 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  const gridStyle = useMemo<React.CSSProperties>(() => {
+    const minorSpacing = Math.max(6, 28 * transform.k);
+    const majorSpacing = minorSpacing * 4;
+
+    const offset = (value: number, spacing: number) => {
+      const remainder = value % spacing;
+      return remainder < 0 ? remainder + spacing : remainder;
+    };
+
+    const minorOffsetX = offset(transform.x, minorSpacing);
+    const minorOffsetY = offset(transform.y, minorSpacing);
+    const majorOffsetX = offset(transform.x, majorSpacing);
+    const majorOffsetY = offset(transform.y, majorSpacing);
+
+    return {
+      backgroundColor: '#050b16',
+      backgroundImage: [
+        'linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px)',
+        'linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px)',
+        'linear-gradient(rgba(14, 116, 144, 0.18) 1px, transparent 1px)',
+        'linear-gradient(90deg, rgba(14, 116, 144, 0.18) 1px, transparent 1px)',
+      ].join(','),
+      backgroundSize: [
+        `${minorSpacing}px ${minorSpacing}px`,
+        `${minorSpacing}px ${minorSpacing}px`,
+        `${majorSpacing}px ${majorSpacing}px`,
+        `${majorSpacing}px ${majorSpacing}px`,
+      ].join(','),
+      backgroundPosition: [
+        `${minorOffsetX}px ${minorOffsetY}px`,
+        `${minorOffsetX}px ${minorOffsetY}px`,
+        `${majorOffsetX}px ${majorOffsetY}px`,
+        `${majorOffsetX}px ${majorOffsetY}px`,
+      ].join(','),
+      boxShadow: 'inset 0 0 140px rgba(8, 47, 73, 0.45)',
+    };
+  }, [transform]);
+
   const isNumericType = useCallback((type: DataType) => type === DataType.INTEGER || type === DataType.FLOAT, []);
 
   const pinsAreCompatible = useCallback((fromPin: Pin, toPin: Pin) => {
@@ -337,7 +375,8 @@ export default function Canvas({
   return (
     <div
       ref={canvasRef}
-      className={`relative w-full h-full bg-[#1a1a1a] overflow-hidden select-none focus:outline-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`relative w-full h-full overflow-hidden select-none focus:outline-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      style={gridStyle}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseDown={handleMouseDown}
@@ -348,8 +387,15 @@ export default function Canvas({
       onContextMenu={handleContextMenu}
       tabIndex={0}
     >
-        <div 
-            className="absolute top-0 left-0"
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background: 'radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.14), transparent 55%), radial-gradient(circle at 80% 85%, rgba(8, 145, 178, 0.12), transparent 60%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+        <div
+            className="absolute top-0 left-0 z-10"
             style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`, transformOrigin: '0 0' }}
         >
             <svg className="absolute top-0 left-0 pointer-events-none" style={{ width: '100vw', height: '100vh', overflow: 'visible' }}>

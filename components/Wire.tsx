@@ -48,13 +48,14 @@ export default function WireComponent({ wire, startPos, endPos, dataType, isPrev
   const innerGradientId = useMemo(() => `wire-inner-${baseId}`, [baseId]);
   const glowId = useMemo(() => `wire-glow-${baseId}`, [baseId]);
 
-  const baseStrokeWidth = finalDataType === DataType.EXEC ? 4 : 3;
-  const strokeWidth = isHovered ? baseStrokeWidth + 0.75 : baseStrokeWidth;
-  const highlightWidth = Math.max(strokeWidth - 1.5, 1.5);
-  const outerOpacity = isPreview ? 0.55 : isHovered ? 1 : 0.9;
-  const innerOpacity = isPreview ? 0.75 : isHovered ? 0.95 : 0.85;
-  const glowOpacity = isPreview ? 0.35 : isHovered ? 0.65 : 0.5;
-  const glowDeviation = isHovered ? 5 : 4;
+  const baseStrokeWidth = finalDataType === DataType.EXEC ? 4.5 : 3.25;
+  const strokeWidth = isHovered ? baseStrokeWidth + 0.8 : baseStrokeWidth;
+  const highlightWidth = Math.max(strokeWidth - 1.1, 1.6);
+  const outerOpacity = isPreview ? 0.55 : isHovered ? 1 : 0.92;
+  const innerOpacity = isPreview ? 0.78 : isHovered ? 0.96 : 0.87;
+  const glowOpacity = isPreview ? 0.42 : isHovered ? 0.7 : 0.48;
+  const glowDeviation = isHovered ? 5.5 : 4.2;
+  const previewDash = isPreview ? '12 6' : undefined;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,10 +77,19 @@ export default function WireComponent({ wire, startPos, endPos, dataType, isPrev
           <stop offset="45%" stopColor={palette.mid} stopOpacity={0.8} />
           <stop offset="100%" stopColor={palette.inner} stopOpacity={0.9} />
         </linearGradient>
-        <filter id={glowId} x="-100%" y="-100%" width="300%" height="300%" filterUnits="objectBoundingBox">
+        <filter id={glowId} x="-100%" y="-100%" width="320%" height="320%" filterUnits="objectBoundingBox">
           <feDropShadow dx="0" dy="0" stdDeviation={glowDeviation} floodColor={palette.glow} floodOpacity={glowOpacity} />
         </filter>
       </defs>
+      <path
+        d={pathData}
+        stroke={palette.start}
+        strokeWidth={strokeWidth + 2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={isPreview ? 0.18 : isHovered ? 0.22 : 0.14}
+        fill="none"
+      />
       <path
         d={pathData}
         stroke={`url(#${gradientId})`}
@@ -89,6 +99,7 @@ export default function WireComponent({ wire, startPos, endPos, dataType, isPrev
         opacity={outerOpacity}
         filter={`url(#${glowId})`}
         fill="none"
+        strokeDasharray={previewDash}
         style={{ transition: 'stroke-width 120ms ease, opacity 120ms ease' }}
       />
       <path
@@ -99,6 +110,7 @@ export default function WireComponent({ wire, startPos, endPos, dataType, isPrev
         strokeLinejoin="round"
         opacity={innerOpacity}
         fill="none"
+        strokeDasharray={previewDash}
         style={{ transition: 'stroke-width 120ms ease, opacity 120ms ease' }}
       />
       <path

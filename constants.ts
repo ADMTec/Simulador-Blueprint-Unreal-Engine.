@@ -84,6 +84,66 @@ export const PIN_BACKGROUND_COLORS: Record<DataType, string> = {
     [DataType.ANY]: 'bg-gray-400',
 };
 
+interface PinVisualStyle {
+  fill: string;
+  inner: string;
+  border: string;
+  glow: string;
+  labelText: string;
+  labelBackground: string;
+}
+
+export const PIN_VISUAL_STYLES: Record<DataType, PinVisualStyle> = {
+  [DataType.EXEC]: {
+    fill: '#f8fafc',
+    inner: '#cbd5f5',
+    border: 'rgba(148, 163, 184, 0.55)',
+    glow: 'rgba(191, 219, 254, 0.55)',
+    labelText: '#e2e8f0',
+    labelBackground: 'rgba(148, 163, 184, 0.12)',
+  },
+  [DataType.STRING]: {
+    fill: '#f472b6',
+    inner: '#be185d',
+    border: 'rgba(236, 72, 153, 0.6)',
+    glow: 'rgba(236, 72, 153, 0.45)',
+    labelText: '#fce7f3',
+    labelBackground: 'rgba(236, 72, 153, 0.12)',
+  },
+  [DataType.INTEGER]: {
+    fill: '#22d3ee',
+    inner: '#0284c7',
+    border: 'rgba(14, 165, 233, 0.6)',
+    glow: 'rgba(14, 165, 233, 0.5)',
+    labelText: '#cffafe',
+    labelBackground: 'rgba(14, 165, 233, 0.12)',
+  },
+  [DataType.FLOAT]: {
+    fill: '#34d399',
+    inner: '#047857',
+    border: 'rgba(16, 185, 129, 0.6)',
+    glow: 'rgba(16, 185, 129, 0.45)',
+    labelText: '#d1fae5',
+    labelBackground: 'rgba(16, 185, 129, 0.12)',
+  },
+  [DataType.BOOLEAN]: {
+    fill: '#f87171',
+    inner: '#b91c1c',
+    border: 'rgba(248, 113, 113, 0.55)',
+    glow: 'rgba(248, 113, 113, 0.45)',
+    labelText: '#fee2e2',
+    labelBackground: 'rgba(248, 113, 113, 0.12)',
+  },
+  [DataType.ANY]: {
+    fill: '#cbd5f5',
+    inner: '#475569',
+    border: 'rgba(148, 163, 184, 0.6)',
+    glow: 'rgba(148, 163, 184, 0.4)',
+    labelText: '#e2e8f0',
+    labelBackground: 'rgba(148, 163, 184, 0.12)',
+  },
+};
+
 export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
   [NodeType.BeginPlay]: {
     type: NodeType.BeginPlay,
