@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 // leading to an error on line 263 where `e.currentTarget` was incorrectly cast.
 // The custom node type is consistently aliased as `NodeType`.
 import { Node as NodeType, Wire as WireType, Pin, PinDirection, DataType } from '../types';
-import { NODE_TEMPLATES } from '../constants';
+import { NODE_TEMPLATES, ORDERED_NODE_TYPES } from '../constants';
 import NodeComponent from './Node';
 import WireComponent from './Wire';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
@@ -307,10 +307,18 @@ export default function Canvas({
     if (!canvasRef.current || !target.contains(e.currentTarget as Node)) return;
 
     const { x, y } = getCanvasCoords(e.clientX, e.clientY);
-    const items = Object.entries(NODE_TEMPLATES).map(([type, template]) => ({
-        label: template.title,
-        action: () => onAddNode(type, x, y),
-    }));
+    const items = ORDERED_NODE_TYPES
+      .map(type => {
+        const template = NODE_TEMPLATES[type];
+        if (!template) {
+          return null;
+        }
+        return {
+          label: template.title,
+          action: () => onAddNode(type, x, y),
+        };
+      })
+      .filter((item): item is ContextMenuItem => item !== null);
 
     setContextMenu({ x: e.clientX, y: e.clientY, items });
   }, [onAddNode, getCanvasCoords]);

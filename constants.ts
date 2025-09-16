@@ -208,6 +208,46 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.ModuloInteger]: {
+      type: NodeType.ModuloInteger,
+      title: 'Integer Modulo (%)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.ClampInteger]: {
+      type: NodeType.ClampInteger,
+      title: 'Clamp Integer',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'Min', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'Max', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.RandomInteger]: {
+      type: NodeType.RandomInteger,
+      title: 'Random Integer',
+      comment: '',
+      inputs: [
+          { label: 'Min', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'Max', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.AddFloat]: {
       type: NodeType.AddFloat,
       title: 'Add Float (+)',
@@ -257,6 +297,70 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       outputs: [
           { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.ModuloFloat]: {
+      type: NodeType.ModuloFloat,
+      title: 'Float Modulo (%)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.ClampFloat]: {
+      type: NodeType.ClampFloat,
+      title: 'Clamp Float',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'Min', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'Max', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.RandomFloat]: {
+      type: NodeType.RandomFloat,
+      title: 'Random Float',
+      comment: '',
+      inputs: [
+          { label: 'Min', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'Max', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.IntToFloat]: {
+      type: NodeType.IntToFloat,
+      title: 'Int → Float',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.FloatToInt]: {
+      type: NodeType.FloatToInt,
+      title: 'Float → Int',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
       ],
       properties: {},
   },
@@ -338,6 +442,18 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.BooleanNot]: {
+      type: NodeType.BooleanNot,
+      title: 'Boolean NOT',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.BOOLEAN, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.Branch]: {
       type: NodeType.Branch,
       title: 'Branch',
@@ -392,4 +508,117 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: { value: false },
   },
+  [NodeType.StringConcat]: {
+      type: NodeType.StringConcat,
+      title: 'Append String',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.STRING, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.STRING, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.STRING, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.StringLength]: {
+      type: NodeType.StringLength,
+      title: 'String Length',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.STRING, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Length', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.ToString]: {
+      type: NodeType.ToString,
+      title: 'To String',
+      comment: '',
+      inputs: [
+          { label: 'Value', dataType: DataType.ANY, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.STRING, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
 };
+
+export const NODE_LIBRARY_GROUPS: { label: string; types: NodeType[] }[] = [
+  {
+    label: 'Flow Control',
+    types: [NodeType.BeginPlay, NodeType.Sequence, NodeType.Branch],
+  },
+  {
+    label: 'Variables',
+    types: [NodeType.GetVariable, NodeType.SetVariable, NodeType.ClearVariable],
+  },
+  {
+    label: 'Literals',
+    types: [
+      NodeType.StringLiteral,
+      NodeType.IntegerLiteral,
+      NodeType.FloatLiteral,
+      NodeType.BooleanLiteral,
+    ],
+  },
+  {
+    label: 'Math · Integer',
+    types: [
+      NodeType.AddInteger,
+      NodeType.SubtractInteger,
+      NodeType.MultiplyInteger,
+      NodeType.DivideInteger,
+      NodeType.ModuloInteger,
+      NodeType.ClampInteger,
+      NodeType.RandomInteger,
+    ],
+  },
+  {
+    label: 'Math · Float',
+    types: [
+      NodeType.AddFloat,
+      NodeType.SubtractFloat,
+      NodeType.MultiplyFloat,
+      NodeType.DivideFloat,
+      NodeType.ModuloFloat,
+      NodeType.ClampFloat,
+      NodeType.RandomFloat,
+    ],
+  },
+  {
+    label: 'Math · Conversion',
+    types: [NodeType.IntToFloat, NodeType.FloatToInt],
+  },
+  {
+    label: 'Comparison & Logic',
+    types: [
+      NodeType.GreaterThanInteger,
+      NodeType.LessThanInteger,
+      NodeType.EqualsInteger,
+      NodeType.GreaterThanFloat,
+      NodeType.LessThanFloat,
+      NodeType.EqualsFloat,
+      NodeType.BooleanNot,
+    ],
+  },
+  {
+    label: 'String & Output',
+    types: [
+      NodeType.PrintString,
+      NodeType.StringConcat,
+      NodeType.StringLength,
+      NodeType.ToString,
+    ],
+  },
+];
+
+const groupedTypes = new Set<NodeType>(NODE_LIBRARY_GROUPS.flatMap(group => group.types));
+
+export const ORDERED_NODE_TYPES: NodeType[] = [
+  ...NODE_LIBRARY_GROUPS.flatMap(group => group.types),
+  ...((Object.keys(NODE_TEMPLATES) as NodeType[]).filter(type => !groupedTypes.has(type))),
+];

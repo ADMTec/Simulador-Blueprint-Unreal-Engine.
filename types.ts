@@ -43,10 +43,18 @@ export enum NodeType {
   SubtractInteger = 'SubtractInteger',
   MultiplyInteger = 'MultiplyInteger',
   DivideInteger = 'DivideInteger',
+  ModuloInteger = 'ModuloInteger',
+  ClampInteger = 'ClampInteger',
+  RandomInteger = 'RandomInteger',
   AddFloat = 'AddFloat',
   SubtractFloat = 'SubtractFloat',
   MultiplyFloat = 'MultiplyFloat',
   DivideFloat = 'DivideFloat',
+  ModuloFloat = 'ModuloFloat',
+  ClampFloat = 'ClampFloat',
+  RandomFloat = 'RandomFloat',
+  IntToFloat = 'IntToFloat',
+  FloatToInt = 'FloatToInt',
 
   // Comparison
   GreaterThanInteger = 'GreaterThanInteger',
@@ -55,6 +63,14 @@ export enum NodeType {
   GreaterThanFloat = 'GreaterThanFloat',
   LessThanFloat = 'LessThanFloat',
   EqualsFloat = 'EqualsFloat',
+
+  // String operations
+  StringConcat = 'StringConcat',
+  StringLength = 'StringLength',
+  ToString = 'ToString',
+
+  // Boolean utilities
+  BooleanNot = 'BooleanNot',
 }
 
 export interface Node {

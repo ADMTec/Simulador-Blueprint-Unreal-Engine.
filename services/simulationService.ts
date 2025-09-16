@@ -38,6 +38,36 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
                 if (fromNode.type === NodeType.DivideInteger) return b !== 0 ? Math.floor(a / b) : 0;
                 return 0;
             }
+            case NodeType.ModuloInteger: {
+                const a = getInputValue(fromNode, 'A', DataType.INTEGER);
+                const b = getInputValue(fromNode, 'B', DataType.INTEGER);
+                if (typeof a !== 'number' || typeof b !== 'number' || b === 0) return 0;
+                const remainder = a % b;
+                return remainder < 0 ? remainder + Math.abs(b) : remainder;
+            }
+            case NodeType.ClampInteger: {
+                const value = getInputValue(fromNode, 'Value', DataType.INTEGER);
+                const min = getInputValue(fromNode, 'Min', DataType.INTEGER);
+                const max = getInputValue(fromNode, 'Max', DataType.INTEGER);
+                if (typeof value !== 'number') return 0;
+                const low = typeof min === 'number' ? min : value;
+                const high = typeof max === 'number' ? max : value;
+                const [clampMin, clampMax] = low <= high ? [low, high] : [high, low];
+                return Math.min(Math.max(value, clampMin), clampMax);
+            }
+            case NodeType.RandomInteger: {
+                const minValue = getInputValue(fromNode, 'Min', DataType.INTEGER);
+                const maxValue = getInputValue(fromNode, 'Max', DataType.INTEGER);
+                const min = typeof minValue === 'number' ? minValue : 0;
+                const max = typeof maxValue === 'number' ? maxValue : 1;
+                const low = Math.min(min, max);
+                const high = Math.max(min, max);
+                const range = high - low + 1;
+                if (!Number.isFinite(range) || range <= 0) {
+                    return low;
+                }
+                return low + Math.floor(Math.random() * range);
+            }
             case NodeType.GreaterThanInteger:
             case NodeType.LessThanInteger:
             case NodeType.EqualsInteger: {
@@ -64,6 +94,45 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
                 if (fromNode.type === NodeType.DivideFloat) return b !== 0 ? a / b : 0;
                 return 0;
             }
+            case NodeType.ModuloFloat: {
+                const a = getInputValue(fromNode, 'A', DataType.FLOAT);
+                const b = getInputValue(fromNode, 'B', DataType.FLOAT);
+                if (typeof a !== 'number' || typeof b !== 'number' || b === 0) return 0;
+                return a % b;
+            }
+            case NodeType.ClampFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                const min = getInputValue(fromNode, 'Min', DataType.FLOAT);
+                const max = getInputValue(fromNode, 'Max', DataType.FLOAT);
+                if (typeof value !== 'number') return 0;
+                const low = typeof min === 'number' ? min : value;
+                const high = typeof max === 'number' ? max : value;
+                const [clampMin, clampMax] = low <= high ? [low, high] : [high, low];
+                return Math.min(Math.max(value, clampMin), clampMax);
+            }
+            case NodeType.RandomFloat: {
+                const minValue = getInputValue(fromNode, 'Min', DataType.FLOAT);
+                const maxValue = getInputValue(fromNode, 'Max', DataType.FLOAT);
+                const min = typeof minValue === 'number' ? minValue : 0;
+                const max = typeof maxValue === 'number' ? maxValue : 1;
+                const low = Math.min(min, max);
+                const high = Math.max(min, max);
+                const range = high - low;
+                if (!Number.isFinite(range) || range === 0) {
+                    return low;
+                }
+                return low + Math.random() * range;
+            }
+            case NodeType.IntToFloat: {
+                const value = getInputValue(fromNode, 'Value', DataType.INTEGER);
+                if (value === undefined || value === null) return 0;
+                return Number(value);
+            }
+            case NodeType.FloatToInt: {
+                const value = getInputValue(fromNode, 'Value', DataType.FLOAT);
+                if (typeof value !== 'number') return 0;
+                return Math.trunc(value);
+            }
             case NodeType.GreaterThanFloat:
             case NodeType.LessThanFloat:
             case NodeType.EqualsFloat: {
@@ -75,6 +144,24 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
                 if (fromNode.type === NodeType.LessThanFloat) return a < b;
                 if (fromNode.type === NodeType.EqualsFloat) return a === b;
                 return false;
+            }
+
+            case NodeType.StringConcat: {
+                const a = getInputValue(fromNode, 'A', DataType.STRING);
+                const b = getInputValue(fromNode, 'B', DataType.STRING);
+                return `${a ?? ''}${b ?? ''}`;
+            }
+            case NodeType.StringLength: {
+                const value = getInputValue(fromNode, 'Value', DataType.STRING);
+                return String(value ?? '').length;
+            }
+            case NodeType.ToString: {
+                const value = getInputValue(fromNode, 'Value', DataType.ANY);
+                return value === undefined || value === null ? '' : String(value);
+            }
+            case NodeType.BooleanNot: {
+                const value = getInputValue(fromNode, 'Value', DataType.BOOLEAN);
+                return !value;
             }
 
             case NodeType.StringLiteral:
