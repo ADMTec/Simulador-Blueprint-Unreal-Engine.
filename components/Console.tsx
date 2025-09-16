@@ -13,18 +13,31 @@ export default function Console({ output }: ConsoleProps) {
   }, [output]);
 
   return (
-    <div className="h-full bg-[#1e1e1e] border-t border-gray-700 flex flex-col">
-      <div className="px-4 py-1 bg-[#333] border-b border-gray-700">
-        <h3 className="font-semibold text-gray-300">Console</h3>
+    <div className="h-full flex flex-col text-slate-200">
+      <div className="px-4 py-2 bg-slate-950/60 border-b border-slate-800/60 backdrop-blur">
+        <h3 className="text-xs uppercase tracking-[0.4em] text-slate-400">Console</h3>
       </div>
-      <div className="p-4 overflow-y-auto flex-grow font-roboto-mono text-sm">
-        {output.map((line, index) => (
-          <div key={index} className="flex">
-            <span className="text-gray-500 mr-2">{'>'}</span>
-            <p className={`whitespace-pre-wrap ${line.toLowerCase().includes('error') ? 'text-red-400' : 'text-gray-300'}`}>{line}</p>
-          </div>
-        ))}
-        <div ref={consoleEndRef} />
+      <div className="relative flex-1 overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, rgba(12, 74, 110, 0.12), transparent 50%), radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.12), transparent 60%)',
+            opacity: 0.9,
+          }}
+        />
+        <div className="relative h-full overflow-y-auto p-4 font-roboto-mono text-sm space-y-2">
+          {output.map((line, index) => (
+            <div key={index} className="flex items-start gap-3">
+              <span className="text-[11px] uppercase tracking-[0.35em] text-slate-500/80 mt-0.5">{'>'}</span>
+              <p
+                className={`whitespace-pre-wrap ${line.toLowerCase().includes('error') ? 'text-rose-300' : 'text-slate-200/90'}`}
+              >
+                {line}
+              </p>
+            </div>
+          ))}
+          <div ref={consoleEndRef} />
+        </div>
       </div>
     </div>
   );

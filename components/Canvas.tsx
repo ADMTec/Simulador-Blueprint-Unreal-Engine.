@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 // leading to an error on line 263 where `e.currentTarget` was incorrectly cast.
 // The custom node type is consistently aliased as `NodeType`.
 import { Node as NodeType, Wire as WireType, Pin, PinDirection, DataType } from '../types';
-import { NODE_TEMPLATES } from '../constants';
+import { NODE_TEMPLATES, ORDERED_NODE_TYPES } from '../constants';
 import NodeComponent from './Node';
 import WireComponent from './Wire';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
@@ -70,6 +70,88 @@ export default function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, k: 1 });
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const gridStyle = useMemo<React.CSSProperties>(() => {
+    const minorSpacing = Math.max(6, 28 * transform.k);
+    const majorSpacing = minorSpacing * 4;
+
+    const offset = (value: number, spacing: number) => {
+      const remainder = value % spacing;
+      return remainder < 0 ? remainder + spacing : remainder;
+    };
+
+    const minorOffsetX = offset(transform.x, minorSpacing);
+    const minorOffsetY = offset(transform.y, minorSpacing);
+    const majorOffsetX = offset(transform.x, majorSpacing);
+    const majorOffsetY = offset(transform.y, majorSpacing);
+
+    return {
+      backgroundColor: '#050b16',
+      backgroundImage: [
+        'linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px)',
+        'linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px)',
+        'linear-gradient(rgba(14, 116, 144, 0.18) 1px, transparent 1px)',
+        'linear-gradient(90deg, rgba(14, 116, 144, 0.18) 1px, transparent 1px)',
+      ].join(','),
+      backgroundSize: [
+        `${minorSpacing}px ${minorSpacing}px`,
+        `${minorSpacing}px ${minorSpacing}px`,
+        `${majorSpacing}px ${majorSpacing}px`,
+        `${majorSpacing}px ${majorSpacing}px`,
+      ].join(','),
+      backgroundPosition: [
+        `${minorOffsetX}px ${minorOffsetY}px`,
+        `${minorOffsetX}px ${minorOffsetY}px`,
+        `${majorOffsetX}px ${majorOffsetY}px`,
+        `${majorOffsetX}px ${majorOffsetY}px`,
+      ].join(','),
+      boxShadow: 'inset 0 0 140px rgba(8, 47, 73, 0.45)',
+    };
+  }, [transform]);
+
+  const isNumericType = useCallback((type: DataType) => type === DataType.INTEGER || type === DataType.FLOAT, []);
+
+  const pinsAreCompatible = useCallback((fromPin: Pin, toPin: Pin) => {
+    if (fromPin.dataType === DataType.EXEC || toPin.dataType === DataType.EXEC) {
+      return fromPin.dataType === DataType.EXEC && toPin.dataType === DataType.EXEC;
+    }
+
+    if (fromPin.dataType === DataType.ANY || toPin.dataType === DataType.ANY) {
+      return true;
+    }
+
+    if (fromPin.dataType === toPin.dataType) {
+      return true;
+    }
+
+    if (isNumericType(fromPin.dataType) && isNumericType(toPin.dataType)) {
+      return true;
+    }
+
+    return false;
+  }, [isNumericType]);
+
+  const determineWireDataType = useCallback((fromPin: Pin, toPin: Pin): DataType => {
+    if (fromPin.dataType === DataType.EXEC || toPin.dataType === DataType.EXEC) {
+      return DataType.EXEC;
+    }
+
+    if (fromPin.dataType === DataType.ANY) {
+      return toPin.dataType;
+    }
+
+    if (toPin.dataType === DataType.ANY) {
+      return fromPin.dataType;
+    }
+
+    if (isNumericType(fromPin.dataType) && isNumericType(toPin.dataType)) {
+      return fromPin.dataType === DataType.FLOAT || toPin.dataType === DataType.FLOAT
+        ? DataType.FLOAT
+        : DataType.INTEGER;
+    }
+
+    return fromPin.dataType;
+  }, [isNumericType]);
   
   const nodeMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
   const pinMap = useMemo(() => {
@@ -154,23 +236,18 @@ export default function Canvas({
     e.stopPropagation();
     if (e.button === 0 && wirePreview && toPin.direction === PinDirection.INPUT) {
         const fromPin = wirePreview.fromPin;
-        if (toPin.nodeId !== fromPin.nodeId && (
-            toPin.dataType === fromPin.dataType ||
-            fromPin.dataType === DataType.ANY ||
-            toPin.dataType === DataType.ANY ||
-            (fromPin.dataType === DataType.EXEC && toPin.dataType === DataType.EXEC)
-        )) {
+        if (toPin.nodeId !== fromPin.nodeId && pinsAreCompatible(fromPin, toPin)) {
             onAddWire({
                 fromNodeId: fromPin.nodeId,
                 fromPinId: fromPin.id,
                 toNodeId: toPin.nodeId,
                 toPinId: toPin.id,
-                dataType: fromPin.dataType === DataType.EXEC ? DataType.EXEC : (fromPin.dataType !== DataType.ANY ? fromPin.dataType : toPin.dataType),
+                dataType: determineWireDataType(fromPin, toPin),
             });
         }
     }
     setWirePreview(null);
-  }, [wirePreview, onAddWire]);
+  }, [wirePreview, onAddWire, pinsAreCompatible, determineWireDataType]);
 
   const handleMouseUp = useCallback(() => {
     setDragging(null);
@@ -268,10 +345,18 @@ export default function Canvas({
     if (!canvasRef.current || !target.contains(e.currentTarget as Node)) return;
 
     const { x, y } = getCanvasCoords(e.clientX, e.clientY);
-    const items = Object.entries(NODE_TEMPLATES).map(([type, template]) => ({
-        label: template.title,
-        action: () => onAddNode(type, x, y),
-    }));
+    const items = ORDERED_NODE_TYPES
+      .map(type => {
+        const template = NODE_TEMPLATES[type];
+        if (!template) {
+          return null;
+        }
+        return {
+          label: template.title,
+          action: () => onAddNode(type, x, y),
+        };
+      })
+      .filter((item): item is ContextMenuItem => item !== null);
 
     setContextMenu({ x: e.clientX, y: e.clientY, items });
   }, [onAddNode, getCanvasCoords]);
@@ -290,7 +375,8 @@ export default function Canvas({
   return (
     <div
       ref={canvasRef}
-      className={`relative w-full h-full bg-[#1a1a1a] overflow-hidden select-none focus:outline-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`relative w-full h-full overflow-hidden select-none focus:outline-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      style={gridStyle}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseDown={handleMouseDown}
@@ -301,8 +387,15 @@ export default function Canvas({
       onContextMenu={handleContextMenu}
       tabIndex={0}
     >
-        <div 
-            className="absolute top-0 left-0"
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background: 'radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.14), transparent 55%), radial-gradient(circle at 80% 85%, rgba(8, 145, 178, 0.12), transparent 60%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+        <div
+            className="absolute top-0 left-0 z-10"
             style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`, transformOrigin: '0 0' }}
         >
             <svg className="absolute top-0 left-0 pointer-events-none" style={{ width: '100vw', height: '100vh', overflow: 'visible' }}>

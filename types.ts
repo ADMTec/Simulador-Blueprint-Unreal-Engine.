@@ -2,6 +2,7 @@ export enum DataType {
   EXEC = 'EXEC',
   STRING = 'STRING',
   INTEGER = 'INTEGER',
+  FLOAT = 'FLOAT',
   BOOLEAN = 'BOOLEAN',
   ANY = 'ANY',
 }
@@ -33,6 +34,7 @@ export enum NodeType {
   // Literals
   StringLiteral = 'StringLiteral',
   IntegerLiteral = 'IntegerLiteral',
+  FloatLiteral = 'FloatLiteral',
   BooleanLiteral = 'BooleanLiteral',
 
   // Operations
@@ -41,11 +43,46 @@ export enum NodeType {
   SubtractInteger = 'SubtractInteger',
   MultiplyInteger = 'MultiplyInteger',
   DivideInteger = 'DivideInteger',
-  
+  ModuloInteger = 'ModuloInteger',
+  ClampInteger = 'ClampInteger',
+  RandomInteger = 'RandomInteger',
+  AbsoluteInteger = 'AbsoluteInteger',
+  MinInteger = 'MinInteger',
+  MaxInteger = 'MaxInteger',
+  AddFloat = 'AddFloat',
+  SubtractFloat = 'SubtractFloat',
+  MultiplyFloat = 'MultiplyFloat',
+  DivideFloat = 'DivideFloat',
+  ModuloFloat = 'ModuloFloat',
+  ClampFloat = 'ClampFloat',
+  RandomFloat = 'RandomFloat',
+  AbsoluteFloat = 'AbsoluteFloat',
+  MinFloat = 'MinFloat',
+  MaxFloat = 'MaxFloat',
+  PowerFloat = 'PowerFloat',
+  SquareRootFloat = 'SquareRootFloat',
+  FloorFloat = 'FloorFloat',
+  CeilFloat = 'CeilFloat',
+  RoundFloat = 'RoundFloat',
+  LerpFloat = 'LerpFloat',
+  IntToFloat = 'IntToFloat',
+  FloatToInt = 'FloatToInt',
+
   // Comparison
   GreaterThanInteger = 'GreaterThanInteger',
   LessThanInteger = 'LessThanInteger',
   EqualsInteger = 'EqualsInteger',
+  GreaterThanFloat = 'GreaterThanFloat',
+  LessThanFloat = 'LessThanFloat',
+  EqualsFloat = 'EqualsFloat',
+
+  // String operations
+  StringConcat = 'StringConcat',
+  StringLength = 'StringLength',
+  ToString = 'ToString',
+
+  // Boolean utilities
+  BooleanNot = 'BooleanNot',
 }
 
 export interface Node {
