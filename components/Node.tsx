@@ -56,21 +56,29 @@ const NodeComponent: React.FC<NodeProps> = ({ node, isSelected, onNodeMouseDown,
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState(node.properties.name);
-  
+
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState(node.title);
+  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [editingComment, setEditingComment] = useState(node.comment);
   
   useEffect(() => {
     if (!isEditingTitle) {
       setEditingTitle(node.title);
     }
   }, [node.title, isEditingTitle]);
-  
+
   useEffect(() => {
     if (!isEditingName) {
       setEditingName(node.properties.name);
     }
   }, [node.properties.name, isEditingName]);
+
+  useEffect(() => {
+    if (!isEditingComment) {
+      setEditingComment(node.comment);
+    }
+  }, [node.comment, isEditingComment]);
 
 
   const handleNameCommit = () => {
@@ -89,6 +97,13 @@ const NodeComponent: React.FC<NodeProps> = ({ node, isSelected, onNodeMouseDown,
     setIsEditingTitle(false);
   };
 
+  const handleCommentCommit = () => {
+    if (editingComment !== node.comment) {
+      onUpdateNode(node.id, { comment: editingComment });
+    }
+    setIsEditingComment(false);
+  };
+
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleNameCommit();
@@ -104,6 +119,16 @@ const NodeComponent: React.FC<NodeProps> = ({ node, isSelected, onNodeMouseDown,
     } else if (e.key === 'Escape') {
       setEditingTitle(node.title);
       setIsEditingTitle(false);
+    }
+  };
+
+  const handleCommentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleCommentCommit();
+    } else if (e.key === 'Escape') {
+      setEditingComment(node.comment);
+      setIsEditingComment(false);
     }
   };
 
@@ -130,7 +155,28 @@ const NodeComponent: React.FC<NodeProps> = ({ node, isSelected, onNodeMouseDown,
           <p onDoubleClick={() => showEditableTitle && setIsEditingTitle(true)}>{node.title}</p>
         )}
         
-        {node.comment && <p className="text-xs font-normal text-gray-400 italic mt-1">{node.comment}</p>}
+        <div className="mt-1">
+          {isEditingComment ? (
+            <textarea
+              value={editingComment}
+              onChange={(e) => setEditingComment(e.target.value)}
+              onBlur={handleCommentCommit}
+              onKeyDown={handleCommentKeyDown}
+              className="w-full text-xs text-gray-200 bg-black bg-opacity-50 px-2 py-1 rounded border border-yellow-400 outline-none resize-none"
+              rows={2}
+              placeholder="Add comment..."
+              autoFocus
+              onMouseDown={e => e.stopPropagation()}
+            />
+          ) : (
+            <p
+              className={`text-xs italic ${node.comment ? 'text-gray-400' : 'text-gray-600'} cursor-text`}
+              onDoubleClick={() => setIsEditingComment(true)}
+            >
+              {node.comment || 'Add comment...'}
+            </p>
+          )}
+        </div>
         {showVariableName && (
           isEditingName ? (
             <input

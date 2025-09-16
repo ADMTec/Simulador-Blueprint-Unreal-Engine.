@@ -51,6 +51,9 @@ interface ContextMenuState {
     items: ContextMenuItem[];
 }
 
+const GRID_SIZE = 24;
+const GRID_EXTENT = 4096;
+
 export default function Canvas({
   nodes,
   wires,
@@ -70,6 +73,8 @@ export default function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, k: 1 });
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const snap = useCallback((value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE, []);
   
   const nodeMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
   const pinMap = useMemo(() => {
@@ -191,11 +196,13 @@ export default function Canvas({
     const dy = (e.clientY - dragging.startY);
 
     if (dragging.type === 'node' && dragging.id && dragging.nodeInitialX !== undefined && dragging.nodeInitialY !== undefined) {
-      onNodePositionChange(dragging.id, dragging.nodeInitialX + (dx / transform.k), dragging.nodeInitialY + (dy / transform.k));
+      const newX = dragging.nodeInitialX + (dx / transform.k);
+      const newY = dragging.nodeInitialY + (dy / transform.k);
+      onNodePositionChange(dragging.id, snap(newX), snap(newY));
     } else if (dragging.type === 'pan' && dragging.transformInitialX !== undefined && dragging.transformInitialY !== undefined) {
       setTransform(prev => ({ ...prev, x: dragging.transformInitialX! + dx, y: dragging.transformInitialY! + dy }));
     }
-  }, [dragging, onNodePositionChange, wirePreview, transform.k, getCanvasCoords]);
+  }, [dragging, onNodePositionChange, wirePreview, transform.k, getCanvasCoords, snap]);
 
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current) {
@@ -254,7 +261,7 @@ export default function Canvas({
     const type = event.dataTransfer.getData('application/reactflow');
     if (!type) return;
     const { x, y } = getCanvasCoords(event.clientX, event.clientY);
-    onAddNode(type, x, y);
+    onAddNode(type, snap(x), snap(y));
   };
 
   const onDragOver = (event: React.DragEvent) => {
@@ -264,28 +271,44 @@ export default function Canvas({
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    const target = e.target as HTMLElement;
-    if (!canvasRef.current || !target.contains(e.currentTarget as Node)) return;
+    if (!canvasRef.current) return;
+
+    const target = e.target as Node | null;
+    if (!target || !canvasRef.current.contains(target)) return;
 
     const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+    const snappedX = snap(x);
+    const snappedY = snap(y);
     const items = Object.entries(NODE_TEMPLATES).map(([type, template]) => ({
         label: template.title,
-        action: () => onAddNode(type, x, y),
+        action: () => onAddNode(type, snappedX, snappedY),
     }));
 
     setContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [onAddNode, getCanvasCoords]);
+  }, [onAddNode, getCanvasCoords, snap]);
 
   const handleNodeContextMenu = useCallback((e: React.MouseEvent, nodeId: string) => {
       e.preventDefault();
       e.stopPropagation();
       onSelectNode(nodeId);
+      const node = nodeMap.get(nodeId);
       const items = [
+          {
+            label: 'Edit Comment',
+            action: () => {
+              setContextMenu(null);
+              const existing = node?.comment ?? '';
+              const updated = window.prompt('Edit comment', existing);
+              if (updated !== null) {
+                onUpdateNode(nodeId, { comment: updated });
+              }
+            },
+          },
           { label: 'Duplicate Node', action: () => onDuplicateNode(nodeId) },
           { label: 'Delete Node', action: () => onDeleteNode(nodeId) },
       ];
       setContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [onSelectNode, onDeleteNode, onDuplicateNode]);
+  }, [onSelectNode, onDeleteNode, onDuplicateNode, onUpdateNode, nodeMap]);
   
   return (
     <div
@@ -301,10 +324,26 @@ export default function Canvas({
       onContextMenu={handleContextMenu}
       tabIndex={0}
     >
-        <div 
+        <div
             className="absolute top-0 left-0"
             style={{ transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`, transformOrigin: '0 0' }}
         >
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                top: -GRID_EXTENT / 2,
+                left: -GRID_EXTENT / 2,
+                width: GRID_EXTENT,
+                height: GRID_EXTENT,
+                backgroundImage: `linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                  linear-gradient(0deg, rgba(255,255,255,0.12) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)` ,
+                backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px, ${GRID_SIZE}px ${GRID_SIZE}px, ${GRID_SIZE * 5}px ${GRID_SIZE * 5}px, ${GRID_SIZE * 5}px ${GRID_SIZE * 5}px`,
+                backgroundPosition: '0px 0px, 0px 0px, 0px 0px, 0px 0px',
+                opacity: 0.3,
+              }}
+            />
             <svg className="absolute top-0 left-0 pointer-events-none" style={{ width: '100vw', height: '100vh', overflow: 'visible' }}>
                 {wires.map(wire => {
                     return (
