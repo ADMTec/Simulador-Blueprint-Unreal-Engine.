@@ -15,10 +15,39 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
     }
   }
 
-  const getInputValue = (node: Node, pinLabel: string, pinDataType: DataType): any => {
-    const pin = node.inputs.find(p => p.label === pinLabel && p.dataType === pinDataType);
+  const valueCache = new Map<string, any>();
+  let cacheVersion = 0;
+  const invalidateCache = () => {
+    cacheVersion += 1;
+    valueCache.clear();
+  };
+  type ForLoopState = {
+    next: number;
+    end: number;
+    step: number;
+    direction: 1 | -1;
+    iterations: number;
+    current: number | null;
+  };
+  const forLoopStates = new Map<string, ForLoopState>();
+  const whileIterationCounts = new Map<string, number>();
+  const LOOP_ITERATION_LIMIT = 1000;
+
+  const getInputValue = (node: Node, pinLabel: string): any => {
+    const pin = node.inputs.find(p => p.label === pinLabel);
     if (!pin) return undefined;
     return evaluatePinValue(node.id, pin.id);
+  };
+
+  const describeValue = (value: unknown): string => {
+    if (value === undefined) return 'undefined';
+    if (value === null) return 'null';
+    if (typeof value === 'string') return `"${value}"`;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   };
 
   const parseNumericInput = (value: unknown): number | null => {
@@ -41,18 +70,25 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
     return null;
   };
 
-  const getNumericInputs = (node: Node): { a: number; b: number } | null => {
-    const rawA = getInputValue(node, 'A', DataType.INTEGER);
-    const rawB = getInputValue(node, 'B', DataType.INTEGER);
+  const getNumericInputs = (node: Node, mode: 'integer' | 'float'): { a: number; b: number } | null => {
+    const pinA = node.inputs.find(p => p.label === 'A');
+    const pinB = node.inputs.find(p => p.label === 'B');
+    if (!pinA || !pinB) return null;
+
+    const rawA = evaluatePinValue(node.id, pinA.id);
+    const rawB = evaluatePinValue(node.id, pinB.id);
     const parsedA = parseNumericInput(rawA);
     const parsedB = parseNumericInput(rawB);
 
     if (parsedA === null || parsedB === null) {
-      const describe = (value: unknown) => String(value);
       output.push(
-        `Warning: ${node.title} expected numeric inputs but received ${describe(rawA)} and ${describe(rawB)}.`
+        `Warning: ${node.title} expected numeric inputs but received ${describeValue(rawA)} and ${describeValue(rawB)}.`
       );
       return null;
+    }
+
+    if (mode === 'integer') {
+      return { a: Math.trunc(parsedA), b: Math.trunc(parsedB) };
     }
 
     return { a: parsedA, b: parsedB };
@@ -63,73 +99,158 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
     const node = nodeMap.get(nodeId);
 
     if (wire) {
-        const fromNode = nodeMap.get(wire.fromNodeId);
-        if (!fromNode) return undefined;
-        
-        switch (fromNode.type) {
-            case NodeType.GetVariable:
-                return variables[fromNode.properties.name];
+      const cacheKey = `${cacheVersion}:${wire.fromNodeId}:${wire.fromPinId}`;
+      if (valueCache.has(cacheKey)) {
+        return valueCache.get(cacheKey);
+      }
+
+      const fromNode = nodeMap.get(wire.fromNodeId);
+      if (!fromNode) return undefined;
+
+      let shouldCache = true;
+      let result: any;
+
+      switch (fromNode.type) {
+        case NodeType.GetVariable:
+          shouldCache = false;
+          result = variables[fromNode.properties.name];
+          break;
+        case NodeType.AddInteger:
+        case NodeType.SubtractInteger:
+        case NodeType.MultiplyInteger:
+        case NodeType.DivideInteger:
+        case NodeType.GreaterThanInteger:
+        case NodeType.LessThanInteger:
+        case NodeType.EqualsInteger: {
+          const numericInputs = getNumericInputs(fromNode, 'integer');
+          const expectsBooleanResult =
+            fromNode.type === NodeType.GreaterThanInteger ||
+            fromNode.type === NodeType.LessThanInteger ||
+            fromNode.type === NodeType.EqualsInteger;
+
+          if (!numericInputs) {
+            result = expectsBooleanResult ? false : 0;
+            break;
+          }
+
+          const { a, b } = numericInputs;
+
+          switch (fromNode.type) {
             case NodeType.AddInteger:
+              result = a + b;
+              break;
             case NodeType.SubtractInteger:
+              result = a - b;
+              break;
             case NodeType.MultiplyInteger:
+              result = a * b;
+              break;
             case NodeType.DivideInteger:
-            case NodeType.GreaterThanInteger:
-            case NodeType.LessThanInteger:
-            case NodeType.EqualsInteger: {
-                const numericInputs = getNumericInputs(fromNode);
-                const expectsBooleanResult =
-                    fromNode.type === NodeType.GreaterThanInteger ||
-                    fromNode.type === NodeType.LessThanInteger ||
-                    fromNode.type === NodeType.EqualsInteger;
-
-                if (!numericInputs) {
-                    return expectsBooleanResult ? false : 0;
-                }
-
-                const { a, b } = numericInputs;
-
-                switch (fromNode.type) {
-                    case NodeType.AddInteger:
-                        return a + b;
-                    case NodeType.SubtractInteger:
-                        return a - b;
-                    case NodeType.MultiplyInteger:
-                        return a * b;
-                    case NodeType.DivideInteger:
-                        if (b === 0) {
-                            output.push(`Warning: ${fromNode.title} attempted to divide by zero. Returning 0.`);
-                            return 0;
-                        }
-                        return Math.trunc(a / b);
-                    case NodeType.GreaterThanInteger:
-                        return a > b;
-                    case NodeType.LessThanInteger:
-                        return a < b;
-                    case NodeType.EqualsInteger:
-                        return a === b;
-                }
-                return 0;
-            }
-
-            case NodeType.StringLiteral:
-            case NodeType.IntegerLiteral:
-            case NodeType.BooleanLiteral:
-                return fromNode.properties.value;
-
-            default:
-              const outputPin = fromNode.outputs.find(p => p.id === wire.fromPinId);
-              if (outputPin) {
-                // This is a generic case, might need expansion for more complex data nodes
-                return evaluatePinValue(fromNode.id, outputPin.id);
+              if (b === 0) {
+                output.push(`Warning: ${fromNode.title} attempted to divide by zero. Returning 0.`);
+                result = 0;
+                break;
               }
-              return undefined;
+              result = Math.trunc(a / b);
+              break;
+            case NodeType.GreaterThanInteger:
+              result = a > b;
+              break;
+            case NodeType.LessThanInteger:
+              result = a < b;
+              break;
+            case NodeType.EqualsInteger:
+              result = a === b;
+              break;
+          }
+          break;
         }
-    } else {
-        // No wire connected, use node's internal properties for specific cases
-        if (node?.type === NodeType.PrintString) {
-             return node.properties.text;
+        case NodeType.AddFloat:
+        case NodeType.SubtractFloat:
+        case NodeType.MultiplyFloat:
+        case NodeType.DivideFloat:
+        case NodeType.GreaterThanFloat:
+        case NodeType.LessThanFloat:
+        case NodeType.EqualsFloat: {
+          const numericInputs = getNumericInputs(fromNode, 'float');
+          const expectsBooleanResult =
+            fromNode.type === NodeType.GreaterThanFloat ||
+            fromNode.type === NodeType.LessThanFloat ||
+            fromNode.type === NodeType.EqualsFloat;
+
+          if (!numericInputs) {
+            result = expectsBooleanResult ? false : 0;
+            break;
+          }
+
+          const { a, b } = numericInputs;
+
+          switch (fromNode.type) {
+            case NodeType.AddFloat:
+              result = a + b;
+              break;
+            case NodeType.SubtractFloat:
+              result = a - b;
+              break;
+            case NodeType.MultiplyFloat:
+              result = a * b;
+              break;
+            case NodeType.DivideFloat:
+              if (b === 0) {
+                output.push(`Warning: ${fromNode.title} attempted to divide by zero. Returning 0.`);
+                result = 0;
+                break;
+              }
+              result = a / b;
+              break;
+            case NodeType.GreaterThanFloat:
+              result = a > b;
+              break;
+            case NodeType.LessThanFloat:
+              result = a < b;
+              break;
+            case NodeType.EqualsFloat:
+              result = a === b;
+              break;
+          }
+          break;
         }
+        case NodeType.StringLiteral:
+        case NodeType.IntegerLiteral:
+        case NodeType.FloatLiteral:
+        case NodeType.BooleanLiteral:
+          result = fromNode.properties.value;
+          break;
+        case NodeType.ForLoop: {
+          const state = forLoopStates.get(fromNode.id);
+          shouldCache = false;
+          result = state?.current ?? 0;
+          break;
+        }
+        default: {
+          const outputPin = fromNode.outputs.find(p => p.id === wire.fromPinId);
+          if (outputPin) {
+            shouldCache = false;
+            result = evaluatePinValue(fromNode.id, outputPin.id);
+          } else {
+            shouldCache = false;
+            result = undefined;
+          }
+          break;
+        }
+      }
+
+      if (shouldCache) {
+        valueCache.set(cacheKey, result);
+      }
+
+      return result;
     }
+
+    if (node?.type === NodeType.PrintString) {
+      return node.properties.text;
+    }
+
     return undefined;
   };
   
@@ -145,6 +266,11 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
       }
     }
     return nextNodes;
+  };
+
+  const findExecNodesByLabel = (node: Node, label: string): Node[] => {
+    const execPins = node.outputs.filter(p => p.dataType === DataType.EXEC && p.label === label);
+    return execPins.flatMap(pin => findNextExecNodes(pin.id));
   };
 
   const getNextNodesFromSingleExecOutput = (node: Node): Node[] => {
@@ -199,14 +325,117 @@ export const executeBlueprint = (nodes: Node[], wires: Wire[]): string[] => {
         if (valuePin) {
           const value = evaluatePinValue(currentNode.id, valuePin.id);
           variables[currentNode.properties.name] = value;
+          invalidateCache();
         }
         enqueueNextNodes(getNextNodesFromSingleExecOutput(currentNode));
+        break;
+      }
+      case NodeType.ForLoop: {
+        let state = forLoopStates.get(currentNode.id);
+        if (!state) {
+          const rawStart = getInputValue(currentNode, 'Start');
+          const rawEnd = getInputValue(currentNode, 'End');
+          const rawStep = getInputValue(currentNode, 'Step');
+
+          const parsedStart = parseNumericInput(rawStart);
+          const parsedEnd = parseNumericInput(rawEnd);
+          let parsedStep = parseNumericInput(rawStep);
+
+          if (parsedStart === null || parsedEnd === null) {
+            output.push(
+              `Warning: ${currentNode.title} requires numeric Start and End inputs.`
+            );
+            enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+            break;
+          }
+
+          let start = Math.trunc(parsedStart);
+          const end = Math.trunc(parsedEnd);
+          let step = parsedStep === null ? 0 : Math.trunc(parsedStep);
+
+          if (step === 0) {
+            const defaultStep = start <= end ? 1 : -1;
+            output.push(
+              `Warning: ${currentNode.title} received an invalid Step value (${describeValue(rawStep)}). Using ${defaultStep} instead.`
+            );
+            step = defaultStep;
+          }
+
+          const direction: 1 | -1 = step >= 0 ? 1 : -1;
+          step = direction === 1 ? Math.abs(step) : -Math.abs(step);
+
+          if ((direction === 1 && start > end) || (direction === -1 && start < end)) {
+            enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+            break;
+          }
+
+          state = {
+            next: start,
+            end,
+            step,
+            direction,
+            iterations: 0,
+            current: null,
+          };
+          forLoopStates.set(currentNode.id, state);
+        }
+
+        if (!state) {
+          break;
+        }
+
+        if (
+          (state.direction === 1 && state.next > state.end) ||
+          (state.direction === -1 && state.next < state.end)
+        ) {
+          forLoopStates.delete(currentNode.id);
+          enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+          break;
+        }
+
+        if (state.iterations >= LOOP_ITERATION_LIMIT) {
+          output.push(`Error: ${currentNode.title} exceeded ${LOOP_ITERATION_LIMIT} iterations. Aborting loop.`);
+          forLoopStates.delete(currentNode.id);
+          enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+          break;
+        }
+
+        state.current = state.next;
+        state.next += state.step;
+        state.iterations += 1;
+        invalidateCache();
+
+        enqueueNextNodes(findExecNodesByLabel(currentNode, 'Loop Body'));
+        executionQueue.push(currentNode);
+        break;
+      }
+      case NodeType.While: {
+        const conditionPin = currentNode.inputs.find(p => p.label === 'Condition');
+        const condition = conditionPin ? !!evaluatePinValue(currentNode.id, conditionPin.id) : false;
+
+        if (condition) {
+          const iterations = whileIterationCounts.get(currentNode.id) ?? 0;
+          if (iterations >= LOOP_ITERATION_LIMIT) {
+            output.push(`Error: ${currentNode.title} exceeded ${LOOP_ITERATION_LIMIT} iterations. Aborting loop.`);
+            whileIterationCounts.delete(currentNode.id);
+            enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+            break;
+          }
+
+          whileIterationCounts.set(currentNode.id, iterations + 1);
+          enqueueNextNodes(findExecNodesByLabel(currentNode, 'Loop Body'));
+          executionQueue.push(currentNode);
+        } else {
+          whileIterationCounts.delete(currentNode.id);
+          enqueueNextNodes(findExecNodesByLabel(currentNode, 'Completed'));
+        }
         break;
       }
       case NodeType.ClearVariable: {
         const varName = currentNode.properties.name;
         if (varName) {
           delete variables[varName];
+          invalidateCache();
         }
         enqueueNextNodes(getNextNodesFromSingleExecOutput(currentNode));
         break;

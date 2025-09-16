@@ -17,6 +17,7 @@ export const PIN_COLORS: Record<DataType, string> = {
   [DataType.EXEC]: 'stroke-white',
   [DataType.STRING]: 'stroke-pink-500',
   [DataType.INTEGER]: 'stroke-cyan-400',
+  [DataType.FLOAT]: 'stroke-indigo-400',
   [DataType.BOOLEAN]: 'stroke-red-500',
   [DataType.ANY]: 'stroke-gray-400',
 };
@@ -25,6 +26,7 @@ export const PIN_BACKGROUND_COLORS: Record<DataType, string> = {
     [DataType.EXEC]: 'bg-white',
     [DataType.STRING]: 'bg-pink-500',
     [DataType.INTEGER]: 'bg-cyan-400',
+    [DataType.FLOAT]: 'bg-indigo-400',
     [DataType.BOOLEAN]: 'bg-red-500',
     [DataType.ANY]: 'bg-gray-400',
 };
@@ -114,7 +116,20 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
-    [NodeType.SubtractInteger]: {
+  [NodeType.AddFloat]: {
+      type: NodeType.AddFloat,
+      title: 'Add Float (+)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.SubtractInteger]: {
       type: NodeType.SubtractInteger,
       title: 'Subtract Integer (-)',
       comment: '',
@@ -124,6 +139,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       outputs: [
           { label: 'Result', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.SubtractFloat]: {
+      type: NodeType.SubtractFloat,
+      title: 'Subtract Float (-)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
       ],
       properties: {},
   },
@@ -140,6 +168,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.MultiplyFloat]: {
+      type: NodeType.MultiplyFloat,
+      title: 'Multiply Float (*)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.DivideInteger]: {
       type: NodeType.DivideInteger,
       title: 'Divide Integer (/)',
@@ -153,6 +194,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.DivideFloat]: {
+      type: NodeType.DivideFloat,
+      title: 'Divide Float (/)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.GreaterThanInteger]: {
       type: NodeType.GreaterThanInteger,
       title: 'Greater Than (>)',
@@ -160,6 +214,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       inputs: [
           { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
           { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.GreaterThanFloat]: {
+      type: NodeType.GreaterThanFloat,
+      title: 'Greater Than Float (>)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
       ],
       outputs: [
           { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
@@ -179,6 +246,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.LessThanFloat]: {
+      type: NodeType.LessThanFloat,
+      title: 'Less Than Float (<)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.EqualsInteger]: {
       type: NodeType.EqualsInteger,
       title: 'Equals (==)',
@@ -186,6 +266,19 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       inputs: [
           { label: 'A', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
           { label: 'B', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
+  [NodeType.EqualsFloat]: {
+      type: NodeType.EqualsFloat,
+      title: 'Equals Float (==)',
+      comment: '',
+      inputs: [
+          { label: 'A', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
+          { label: 'B', dataType: DataType.FLOAT, direction: PinDirection.INPUT },
       ],
       outputs: [
           { label: 'Result', dataType: DataType.BOOLEAN, direction: PinDirection.OUTPUT },
@@ -206,6 +299,37 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       ],
       properties: {},
   },
+  [NodeType.ForLoop]: {
+      type: NodeType.ForLoop,
+      title: 'For Loop',
+      comment: '',
+      inputs: [
+          { label: '', dataType: DataType.EXEC, direction: PinDirection.INPUT },
+          { label: 'Start', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'End', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+          { label: 'Step', dataType: DataType.INTEGER, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Loop Body', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+          { label: 'Completed', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+          { label: 'Index', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: { start: 0, end: 0, step: 1 },
+  },
+  [NodeType.While]: {
+      type: NodeType.While,
+      title: 'While Loop',
+      comment: '',
+      inputs: [
+          { label: '', dataType: DataType.EXEC, direction: PinDirection.INPUT },
+          { label: 'Condition', dataType: DataType.BOOLEAN, direction: PinDirection.INPUT },
+      ],
+      outputs: [
+          { label: 'Loop Body', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+          { label: 'Completed', dataType: DataType.EXEC, direction: PinDirection.OUTPUT },
+      ],
+      properties: {},
+  },
   [NodeType.StringLiteral]: {
       type: NodeType.StringLiteral,
       title: 'String Literal',
@@ -223,6 +347,16 @@ export const NODE_TEMPLATES: Record<NodeType, NodeTemplate> = {
       inputs: [],
       outputs: [
           { label: 'Value', dataType: DataType.INTEGER, direction: PinDirection.OUTPUT },
+      ],
+      properties: { value: 0 },
+  },
+  [NodeType.FloatLiteral]: {
+      type: NodeType.FloatLiteral,
+      title: 'Float Literal',
+      comment: '',
+      inputs: [],
+      outputs: [
+          { label: 'Value', dataType: DataType.FLOAT, direction: PinDirection.OUTPUT },
       ],
       properties: { value: 0 },
   },
